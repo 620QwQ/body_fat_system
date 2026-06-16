@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width:900px; margin:0 auto;">
+    <h2 style="margin-bottom:20px;">🏆 排行榜</h2>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+        <div class="card">
+            <div class="card-title"><span class="icon">🔥</span> 本周运动消耗排行</div>
+            {% if week_exercise %}
+            <table>
+                <tr><th>排名</th><th>用户</th><th>消耗(kcal)</th><th>时长(分钟)</th></tr>
+                {% for r in week_exercise %}
+                <tr>
+                    <td>{% if loop.index==1 %}🥇{% elif loop.index==2 %}🥈{% elif loop.index==3 %}🥉{% else %}{{ loop.index }}{% endif %}</td>
+                    <td>{{ r.nickname }}</td><td><strong>{{ r.total_burn }}</strong></td><td>{{ r.total_duration }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}<p style="color:var(--text-muted); text-align:center; padding:40px;">暂无数据</p>{% endif %}
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span class="icon">✅</span> 本周打卡排行</div>
+            {% if week_checkin %}
+            <table>
+                <tr><th>排名</th><th>用户</th><th>打卡次数</th></tr>
+                {% for r in week_checkin %}
+                <tr>
+                    <td>{% if loop.index==1 %}🥇{% elif loop.index==2 %}🥈{% elif loop.index==3 %}🥉{% else %}{{ loop.index }}{% endif %}</td>
+                    <td>{{ r.nickname }}</td><td><strong>{{ r.check_count }}</strong> 次</td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}<p style="color:var(--text-muted); text-align:center; padding:40px;">暂无数据</p>{% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="secondary-nav">
+    <a href="{{ url_for('profile_detail', profile_id=profile_id) }}">← 返回详情</a>
+    <a href="{{ url_for('dashboard') }}">📊 仪表盘</a>
+</div>
+<h2>📜 {{ profile.profile_name }} 的体重历史</h2>
+<div class="card">
+    {% if records %}
+    <table>
+        <tr><th>日期</th><th>体重(kg)</th><th>体脂率(%)</th><th>肌肉量(kg)</th><th>水分率(%)</th><th>操作</th></tr>
+        {% for r in records %}
+        <tr>
+            <td>{{ r.record_date }}</td><td>{{ r.weight_kg }}</td><td>{{ r.body_fat_pct }}</td>
+            <td>{{ r.muscle_mass_kg if r.muscle_mass_kg else '-' }}</td><td>{{ r.water_pct if r.water_pct else '-' }}</td>
+            <td>
+                <form method="post" action="{{ url_for('delete_record', record_id=r.record_id) }}" onsubmit="return confirm('确认删除？');" style="display:inline;">
+                    <input type="hidden" name="profile_id" value="{{ profile_id }}">
+                    <button type="submit" class="btn btn-danger btn-sm">删除</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <div class="pagination">
+        {% if page > 1 %}<a href="{{ url_for('history', profile_id=profile_id, page=page-1) }}" class="btn btn-primary btn-sm">上一页</a>{% endif %}
+        <span>第 {{ page }} / {{ total_pages }} 页</span>
+        {% if page < total_pages %}<a href="{{ url_for('history', profile_id=profile_id, page=page+1) }}" class="btn btn-primary btn-sm">下一页</a>{% endif %}
+    </div>
+    {% else %}<p style="color:#888; text-align:center; padding:40px;">暂无记录</p>{% endif %}
+</div>
+{% endblock %}

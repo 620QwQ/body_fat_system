@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="secondary-nav">
+    <a href="{{ url_for('profile_detail', profile_id=profile_id) }}">← 返回详情</a>
+</div>
+<h2>🏃 {{ profile.profile_name }} 的运动记录</h2>
+
+<div class="card">
+    <h3>➕ 添加运动</h3>
+    <form method="post" action="{{ url_for('add_exercise') }}">
+        <input type="hidden" name="profile_id" value="{{ profile_id }}">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">
+            <div class="form-group"><label>时间</label><input type="datetime-local" name="exercise_time" required></div>
+            <div class="form-group"><label>运动类型</label><input type="text" name="exercise_type" required></div>
+            <div class="form-group"><label>时长(分钟)</label><input type="number" name="duration" required></div>
+            <div class="form-group"><label>消耗热量(kcal)</label><input type="number" name="calories" required></div>
+            <div style="display:flex; align-items:flex-end;"><button type="submit" class="btn btn-success" style="width:100%;">添加</button></div>
+        </div>
+    </form>
+</div>
+
+<div class="stats-row"><div class="stat-card"><div class="stat-value">{{ today_burn }}</div><div class="stat-label">今日消耗 (kcal)</div></div></div>
+
+<div class="card">
+    <h3>📋 运动列表</h3>
+    {% if exercises %}
+    <table>
+        <tr><th>时间</th><th>类型</th><th>时长(min)</th><th>消耗(kcal)</th></tr>
+        {% for e in exercises %}
+        <tr><td>{{ e.exercise_time.strftime('%m-%d %H:%M') }}</td><td>{{ e.exercise_type }}</td><td>{{ e.duration_min }}</td><td>{{ e.calories_burned }}</td></tr>
+        {% endfor %}
+    </table>
+    {% else %}<p style="color:#888; text-align:center; padding:40px;">暂无运动记录</p>{% endif %}
+</div>
+{% endblock %}

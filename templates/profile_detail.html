@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="secondary-nav">
+    <a href="{{ url_for('dashboard') }}">← 返回仪表盘</a>
+    <a href="{{ url_for('history', profile_id=profile.profile_id) }}">📜 体重历史</a>
+    <a href="{{ url_for('goals', profile_id=profile.profile_id) }}">🎯 目标管理</a>
+    <a href="{{ url_for('diet', profile_id=profile.profile_id) }}">🍽️ 饮食记录</a>
+    <a href="{{ url_for('exercise', profile_id=profile.profile_id) }}">🏃 运动记录</a>
+    <a href="{{ url_for('measurements', profile_id=profile.profile_id) }}">📏 维度记录</a>
+    <a href="{{ url_for('analysis', profile_id=profile.profile_id) }}">📈 数据分析</a>
+</div>
+<h2>👤 {{ profile.profile_name }} 的详细资料</h2>
+
+<div class="stats-row">
+    <div class="stat-card"><div class="stat-value">{{ profile.gender }}</div><div class="stat-label">性别</div></div>
+    <div class="stat-card"><div class="stat-value">{{ profile.age }}岁</div><div class="stat-label">年龄</div></div>
+    <div class="stat-card"><div class="stat-value">{{ profile.height_cm }}cm</div><div class="stat-label">身高</div></div>
+    <div class="stat-card"><div class="stat-value">{{ total }}</div><div class="stat-label">总记录数</div></div>
+</div>
+
+{% if status %}
+<div class="card">
+    <h3>📊 当前身体状态</h3>
+    <table>
+        <tr><th>体重</th><th>体脂率</th><th>BMI</th><th>肌肉量</th><th>水分率</th><th>记录日期</th></tr>
+        <tr>
+            <td><strong>{{ status.weight_kg }} kg</strong></td>
+            <td>{{ status.body_fat_pct }}%</td>
+            <td><strong>{{ status.bmi }}</strong>{% if status.bmi %}{% if status.bmi < 18.5 %}<span class="badge badge-info">偏瘦</span>{% elif status.bmi < 24 %}<span class="badge badge-success">正常</span>{% elif status.bmi < 28 %}<span class="badge badge-warning">偏胖</span>{% else %}<span class="badge badge-danger">肥胖</span>{% endif %}{% endif %}</td>
+            <td>{{ status.muscle_mass_kg if status.muscle_mass_kg else '-' }} kg</td>
+            <td>{{ status.water_pct if status.water_pct else '-' }}%</td>
+            <td>{{ status.record_date }}</td>
+        </tr>
+    </table>
+</div>
+{% endif %}
+
+{% if goal %}
+<div class="card">
+    <h3>🎯 当前目标</h3>
+    <p>目标类型：<strong>{{ goal.goal_type }}</strong> | 目标体重：<strong>{{ goal.target_weight_kg }} kg</strong></p>
+    <p>起止日期：<strong>{{ goal.start_date }}</strong> ~ <strong>{{ goal.end_date }}</strong></p>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>📋 最近7天记录</h3>
+    {% if recent_records %}
+    <table>
+        <tr><th>日期</th><th>体重(kg)</th><th>体脂率(%)</th><th>肌肉量(kg)</th><th>水分率(%)</th></tr>
+        {% for r in recent_records %}
+        <tr><td>{{ r.record_date }}</td><td>{{ r.weight_kg }}</td><td>{{ r.body_fat_pct }}</td><td>{{ r.muscle_mass_kg if r.muscle_mass_kg else '-' }}</td><td>{{ r.water_pct if r.water_pct else '-' }}</td></tr>
+        {% endfor %}
+    </table>
+    {% else %}<p style="color:#888;">暂无记录</p>{% endif %}
+</div>
+{% endblock %}

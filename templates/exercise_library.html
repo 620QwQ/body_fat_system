@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="secondary-nav"><a href="{{ url_for('dashboard') }}">← 返回仪表盘</a></div>
+<h2>🏃 校园运动库</h2>
+<div class="card">
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:15px;">
+        <span class="badge badge-primary">🏠 宿舍</span>
+        <span class="badge badge-success">🏟️ 操场</span>
+        <span class="badge badge-warning">📚 课间</span>
+        <span class="badge badge-info">🌳 户外</span>
+    </div>
+    {% if exercises %}
+    <table>
+        <tr><th>运动名称</th><th>类别</th><th>30分钟消耗(kcal)</th><th>强度</th><th>场景</th></tr>
+        {% for e in exercises %}
+        <tr>
+            <td>{{ e.exercise_name }}</td><td>{{ e.category }}</td><td>{{ e.calories_per_30min }}</td>
+            <td><span class="badge {% if e.intensity=='高' %}badge-danger{% elif e.intensity=='中' %}badge-warning{% else %}badge-success{% endif %}">{{ e.intensity }}</span></td>
+            <td>{{ e.scene }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+</div>
+{% endblock %}

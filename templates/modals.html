@@ -1,0 +1,327 @@
+<!-- 记录体重弹窗 -->
+<div class="modal-overlay" id="modalWeight" style="display:none;">
+    <div class="modal">
+        <h3>⚖️ 记录体重</h3>
+        <form onsubmit="submitWeight(event)">
+            <div class="form-group"><label>日期</label><input type="date" id="weightDate" required></div>
+            <div class="form-group"><label>体重 (kg)</label><input type="number" step="0.1" id="weightVal" required placeholder="请输入体重"></div>
+            <div class="form-group"><label>体脂率 (%)</label><input type="number" step="0.1" id="fatVal" placeholder="可选"></div>
+            <div class="btn-group" style="justify-content:flex-end; margin-top:20px;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalWeight')">取消</button>
+                <button type="submit" class="btn btn-primary">💾 保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 记录饮食弹窗 -->
+<div class="modal-overlay" id="modalDiet" style="display:none;">
+    <div class="modal">
+        <h3>🍽️ 记录饮食</h3>
+        <form onsubmit="submitDiet(event)">
+            <div class="form-group"><label>餐次</label>
+                <select id="mealType">
+                    <option value="早餐">🌅 早餐</option>
+                    <option value="午餐">☀️ 午餐</option>
+                    <option value="晚餐">🌙 晚餐</option>
+                    <option value="加餐">🍪 加餐</option>
+                </select>
+            </div>
+            <div class="form-group food-search">
+                <label>🔍 搜索食物</label>
+                <input type="text" id="foodSearch" placeholder="输入食物名称搜索..." oninput="searchFood()" autocomplete="off">
+                <div class="food-results" id="foodResults"></div>
+            </div>
+            <div class="form-group"><label>份量 (g)</label><input type="number" id="foodPortion" value="100" oninput="updateFoodCal()"></div>
+            <div id="foodDetail" style="display:none; padding:12px; background:var(--bg); border-radius:8px; margin-bottom:10px; font-size:0.85em;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <div>🔥 热量: <strong id="foodCal">-</strong> kcal</div>
+                    <div>🥩 蛋白质: <strong id="foodProtein">-</strong> g</div>
+                    <div>🧈 脂肪: <strong id="foodFat">-</strong> g</div>
+                    <div>🍚 碳水: <strong id="foodCarb">-</strong> g</div>
+                </div>
+            </div>
+            <div class="btn-group" style="justify-content:flex-end;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalDiet')">取消</button>
+                <button type="submit" class="btn btn-primary">➕ 添加</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 记录运动弹窗（自动计算热量） -->
+<div class="modal-overlay" id="modalExercise" style="display:none;">
+    <div class="modal">
+        <h3>🏃 记录运动</h3>
+        <form onsubmit="submitExercise(event)">
+            <div class="form-group">
+                <label>选择运动项目</label>
+                <select id="exerciseSelect" onchange="onExerciseSelect()">
+                    <option value="">-- 请选择运动 --</option>
+                </select>
+            </div>
+            <div class="form-group"><label>运动名称</label><input type="text" id="exerciseType" required placeholder="或手动输入运动名称"></div>
+            <div class="form-group"><label>时长 (分钟)</label><input type="number" id="exerciseDuration" required placeholder="运动了多久" oninput="calcExerciseCal()"></div>
+            <div class="form-group"><label>消耗热量 (kcal)</label><input type="number" id="exerciseCal" required placeholder="自动计算或手动输入"><span class="form-hint">选择运动后自动计算，也可手动修改</span></div>
+            <div class="btn-group" style="justify-content:flex-end;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalExercise')">取消</button>
+                <button type="submit" class="btn btn-primary">➕ 添加</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 添加人物弹窗 -->
+<div class="modal-overlay" id="modalAddProfile" style="display:none;">
+    <div class="modal">
+        <h3>➕ 添加人物</h3>
+        <form onsubmit="submitAddProfile(event)">
+            <div class="form-group"><label>昵称</label><input type="text" id="newProfileName" required placeholder="给人物取个名字"></div>
+            <div class="form-group"><label>性别</label><select id="newProfileGender"><option value="男">👨 男</option><option value="女">👩 女</option></select></div>
+            <div class="form-group"><label>出生日期</label><input type="date" id="newProfileBirth"></div>
+            <div class="form-group"><label>身高 (cm)</label><input type="number" step="0.1" id="newProfileHeight" value="170" placeholder="身高"></div>
+            <div class="btn-group" style="justify-content:flex-end;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalAddProfile')">取消</button>
+                <button type="submit" class="btn btn-primary">➕ 添加</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 编辑人物弹窗 -->
+<div class="modal-overlay" id="modalEditProfile" style="display:none;">
+    <div class="modal">
+        <h3>✏️ 编辑信息</h3>
+        <form onsubmit="submitEditProfile(event)">
+            <input type="hidden" id="editProfileId">
+            <div class="form-group"><label>昵称</label><input type="text" id="editProfileName" required></div>
+            <div class="form-group"><label>性别</label><select id="editProfileGender"><option value="男">👨 男</option><option value="女">👩 女</option></select></div>
+            <div class="form-group"><label>出生日期</label><input type="date" id="editProfileBirth"></div>
+            <div class="form-group"><label>身高 (cm)</label><input type="number" step="0.1" id="editProfileHeight"></div>
+            <div class="btn-group" style="justify-content:flex-end;">
+                <button type="button" class="btn btn-outline" onclick="closeModal('modalEditProfile')">取消</button>
+                <button type="submit" class="btn btn-primary">💾 保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// ========== 全局变量 ==========
+var currentFood = null;
+var currentFoodData = null; // 完整食物数据
+var exerciseLib = [];
+
+// ========== 弹窗控制 ==========
+function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+// ========== 运动库加载 ==========
+fetch('/api/exercise_library').then(r => r.json()).then(data => {
+    exerciseLib = data;
+    var sel = document.getElementById('exerciseSelect');
+    if (!sel) return;
+    var html = '<option value="">-- 请选择运动 --</option>';
+    var currentCat = '';
+    data.forEach(e => {
+        if (e.category !== currentCat) {
+            if (currentCat) html += '</optgroup>';
+            currentCat = e.category;
+            html += `<optgroup label="${currentCat}">`;
+        }
+        html += `<option value="${e.exercise_name}" data-cal="${e.calories_per_30min}">${e.exercise_name} (${e.calories_per_30min} kcal/30min)</option>`;
+    });
+    html += '</optgroup>';
+    sel.innerHTML = html;
+});
+
+// ========== 运动选择 ==========
+function showRecordExercise() {
+    showModal('modalExercise');
+    document.getElementById('exerciseType').value = '';
+    document.getElementById('exerciseDuration').value = '';
+    document.getElementById('exerciseCal').value = '';
+    document.getElementById('exerciseSelect').value = '';
+}
+
+function onExerciseSelect() {
+    var sel = document.getElementById('exerciseSelect');
+    var name = sel.value;
+    if (name) document.getElementById('exerciseType').value = name;
+    calcExerciseCal();
+}
+
+function calcExerciseCal() {
+    var sel = document.getElementById('exerciseSelect');
+    var calPer30 = sel.selectedOptions[0] ? parseFloat(sel.selectedOptions[0].dataset.cal) : 0;
+    var duration = parseInt(document.getElementById('exerciseDuration').value) || 0;
+    if (calPer30 > 0 && duration > 0) {
+        document.getElementById('exerciseCal').value = Math.round(calPer30 * duration / 30);
+    }
+}
+
+function submitExercise(e) {
+    e.preventDefault();
+    var type = document.getElementById('exerciseType').value;
+    var duration = document.getElementById('exerciseDuration').value;
+    var cal = document.getElementById('exerciseCal').value;
+    if (!type || !duration || !cal) { alert('请填写完整信息'); return; }
+    fetch('/api/add_exercise', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ profile_id: activeProfileId, exercise_type: type, duration: parseInt(duration), calories: parseInt(cal) })
+    }).then(r => r.json()).then(() => {
+        closeModal('modalExercise');
+        loadProfileData(activeProfileId);
+        document.getElementById('encourageBox').innerHTML = '🏃 运动真棒！消耗了 <strong>' + cal + ' kcal</strong>，继续加油！';
+    });
+}
+
+// ========== 食物搜索 ==========
+function searchFood() {
+    var q = document.getElementById('foodSearch').value;
+    if (q.length < 1) { document.getElementById('foodResults').classList.remove('show'); return; }
+    fetch('/api/food_search?q=' + encodeURIComponent(q))
+        .then(r => r.json())
+        .then(data => {
+            var html = '';
+            data.forEach(f => {
+                html += `<div class="food-item" onclick="selectFood('${f.food_name}', ${f.calories_per_100g}, ${f.protein_per_100g}, ${f.fat_per_100g}, ${f.carb_per_100g})">
+                    <strong>${f.food_name}</strong> <small style="color:var(--text-muted);">${f.calories_per_100g} kcal/100g</small>
+                </div>`;
+            });
+            if (data.length === 0) {
+                html += `<div class="food-item" style="color:var(--primary); cursor:pointer;" onclick="addCustomFood()">+ 添加「${q}」到食物库</div>`;
+            }
+            document.getElementById('foodResults').innerHTML = html;
+            document.getElementById('foodResults').classList.add('show');
+        });
+}
+
+function selectFood(name, cal, protein, fat, carb) {
+    currentFood = { name, cal, protein, fat, carb };
+    document.getElementById('foodSearch').value = name;
+    document.getElementById('foodResults').classList.remove('show');
+    document.getElementById('foodDetail').style.display = 'block';
+    updateFoodCal();
+}
+
+function updateFoodCal() {
+    if (!currentFood) return;
+    var portion = parseFloat(document.getElementById('foodPortion').value) || 100;
+    var ratio = portion / 100;
+    document.getElementById('foodCal').textContent = Math.round(currentFood.cal * ratio);
+    document.getElementById('foodProtein').textContent = (currentFood.protein * ratio).toFixed(1);
+    document.getElementById('foodFat').textContent = (currentFood.fat * ratio).toFixed(1);
+    document.getElementById('foodCarb').textContent = (currentFood.carb * ratio).toFixed(1);
+}
+
+function addCustomFood() {
+    var name = document.getElementById('foodSearch').value;
+    if (!name) return;
+    var cal = prompt('每100g热量(kcal)：', '100');
+    if (!cal) return;
+    fetch('/api/add_food', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ food_name: name, calories: parseInt(cal), protein: 0, fat: 0, carb: 0, category: '自定义', scene: '自定义' })
+    }).then(r => r.json()).then(d => {
+        if (d.success) selectFood(name, parseInt(cal), 0, 0, 0);
+        else alert(d.error);
+    });
+}
+
+function submitDiet(e) {
+    e.preventDefault();
+    if (!currentFood) { alert('请先搜索并选择食物'); return; }
+    var portion = parseFloat(document.getElementById('foodPortion').value) || 100;
+    var ratio = portion / 100;
+    fetch('/api/add_diet', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            profile_id: activeProfileId, meal_type: document.getElementById('mealType').value,
+            food_name: currentFood.name, portion: portion,
+            calories: Math.round(currentFood.cal * ratio),
+            protein: Math.round(currentFood.protein * ratio * 10) / 10,
+            fat: Math.round(currentFood.fat * ratio * 10) / 10,
+            carb: Math.round(currentFood.carb * ratio * 10) / 10
+        })
+    }).then(r => r.json()).then(() => {
+        closeModal('modalDiet');
+        loadProfileData(activeProfileId);
+        document.getElementById('encourageBox').innerHTML = '🍽️ 记录完成！今日摄入热量已更新~';
+    });
+}
+
+// ========== 体重记录 ==========
+function showRecordWeight() {
+    document.getElementById('weightDate').value = new Date().toISOString().split('T')[0];
+    showModal('modalWeight');
+}
+
+function submitWeight(e) {
+    e.preventDefault();
+    var fd = new FormData();
+    fd.append('profile_id', activeProfileId);
+    fd.append('record_date', document.getElementById('weightDate').value);
+    fd.append('weight_kg', document.getElementById('weightVal').value);
+    fd.append('body_fat_pct', document.getElementById('fatVal').value || 0);
+    fetch('/add_record', { method: 'POST', body: fd })
+        .then(() => { closeModal('modalWeight'); loadProfileData(activeProfileId); });
+}
+
+// ========== 添加/编辑人物 ==========
+function showAddProfile() { showModal('modalAddProfile'); }
+
+function showEditProfile() {
+    fetch('/api/profile/' + activeProfileId).then(r => r.json()).then(d => {
+        document.getElementById('editProfileId').value = activeProfileId;
+        document.getElementById('editProfileName').value = d.profile.profile_name;
+        document.getElementById('editProfileGender').value = d.profile.gender;
+        document.getElementById('editProfileBirth').value = d.profile.birth_date;
+        document.getElementById('editProfileHeight').value = d.profile.height_cm;
+        showModal('modalEditProfile');
+    });
+}
+
+function submitAddProfile(e) {
+    e.preventDefault();
+    fetch('/api/add_profile', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            profile_name: document.getElementById('newProfileName').value,
+            gender: document.getElementById('newProfileGender').value,
+            birth_date: document.getElementById('newProfileBirth').value || '2000-01-01',
+            height_cm: document.getElementById('newProfileHeight').value
+        })
+    }).then(() => location.reload());
+}
+
+function submitEditProfile(e) {
+    e.preventDefault();
+    fetch('/api/edit_profile', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            profile_id: document.getElementById('editProfileId').value,
+            profile_name: document.getElementById('editProfileName').value,
+            gender: document.getElementById('editProfileGender').value,
+            birth_date: document.getElementById('editProfileBirth').value,
+            height_cm: document.getElementById('editProfileHeight').value
+        })
+    }).then(() => { closeModal('modalEditProfile'); loadProfileData(activeProfileId); });
+}
+
+// ========== 打卡 ==========
+function checkIn() {
+    fetch('/api/checkin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ profile_id: activeProfileId, check_type: '运动' }) })
+        .then(r => r.json()).then(() => {
+            alert('✅ 打卡成功！');
+            document.getElementById('encourageBox').innerHTML = '✅ 今日已打卡！坚持就是胜利！';
+        });
+}
+
+// ========== 点击遮罩关闭弹窗 ==========
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-overlay')) {
+        e.target.style.display = 'none';
+    }
+});
+</script>

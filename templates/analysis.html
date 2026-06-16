@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="secondary-nav">
+    <a href="{{ url_for('profile_detail', profile_id=profile_id) }}">← 返回详情</a>
+</div>
+<h2>📈 {{ profile.profile_name }} 的数据分析</h2>
+<div class="card"><h3>📉 体重变化趋势</h3><div class="chart-container" style="height:280px;"><canvas id="weightChart"></canvas></div></div>
+<div class="card"><h3>📊 体脂率变化趋势</h3><div class="chart-container" style="height:280px;"><canvas id="fatChart"></canvas></div></div>
+<div class="card"><h3>📋 BMI变化趋势</h3><div class="chart-container" style="height:280px;"><canvas id="bmiChart"></canvas></div></div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+var height = {{ profile.height_cm }} / 100;
+fetch('/api/trend/{{ profile_id }}')
+    .then(res => res.json())
+    .then(data => {
+        if (data.error || data.length === 0) return;
+        var dates = data.map(r => r.record_date);
+        var weights = data.map(r => parseFloat(r.weight_kg));
+        var fats = data.map(r => parseFloat(r.body_fat_pct));
+        var bmis = data.map(r => parseFloat((r.weight_kg / (height * height)).toFixed(1)));
+        new Chart(document.getElementById('weightChart'), { type: 'line', data: { labels: dates, datasets: [{ label: '体重(kg)', data: weights, borderColor: '#667eea', tension: 0.3, fill: true, backgroundColor: 'rgba(102,126,234,0.15)', pointRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: Math.min(...weights)-2, max: Math.max(...weights)+2 } } } });
+        new Chart(document.getElementById('fatChart'), { type: 'line', data: { labels: dates, datasets: [{ label: '体脂率(%)', data: fats, borderColor: '#f5576c', tension: 0.3, fill: true, backgroundColor: 'rgba(245,87,108,0.15)', pointRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: Math.min(...fats)-2, max: Math.max(...fats)+2 } } } });
+        new Chart(document.getElementById('bmiChart'), { type: 'line', data: { labels: dates, datasets: [{ label: 'BMI', data: bmis, borderColor: '#43e97b', tension: 0.3, fill: true, backgroundColor: 'rgba(67,233,123,0.15)', pointRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: Math.min(...bmis)-1, max: Math.max(...bmis)+1 } } } });
+    });
+</script>
+{% endblock %}

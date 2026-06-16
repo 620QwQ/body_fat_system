@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="sidebar">
+    <div class="card">
+        <div class="card-title">👥 人物 <button class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="showAddProfile()">+ 添加</button></div>
+        <div class="profile-tabs" id="profileTabs">
+            {% for p in profiles %}
+            <div class="profile-tab {% if p.profile_id == active_profile_id %}active{% endif %}" data-id="{{ p.profile_id }}" onclick="switchProfile({{ p.profile_id }})">
+                <div class="tab-avatar">{{ p.profile_name[0] }}</div>
+                <div><div style="font-weight:600;">{{ p.profile_name }}</div><div style="font-size:0.78em; color:var(--text-muted);">{{ p.gender }} · {{ p.age }}岁</div></div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="card" id="goalCard" style="display:none;"><div class="card-title"><span class="icon">🎯</span> 当前目标</div><div id="goalContent"></div></div>
+</div>
+
+<div class="content">
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">⚖️</div><div class="stat-value" id="statWeight">-</div><div class="stat-label">体重 (kg)</div></div>
+        <div class="stat-card"><div class="stat-icon">📉</div><div class="stat-value" id="statFat">-</div><div class="stat-label">体脂率 (%)</div></div>
+        <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value" id="statBMI">-</div><div class="stat-label">BMI</div></div>
+        <div class="stat-card"><div class="stat-icon">🍽️</div><div class="stat-value" id="statCal">-</div><div class="stat-label">今日摄入 (kcal)</div></div>
+    </div>
+
+    <div class="card"><div class="card-title"><span class="icon">📈</span> 本周体重</div><div class="chart-container"><canvas id="weekChart"></canvas></div></div>
+
+    <div class="btn-group" style="margin-bottom:18px;">
+        <button class="btn btn-primary" onclick="showRecordWeight()">⚖️ 记录体重</button>
+        <button class="btn btn-primary" onclick="showRecordDiet()">🍽️ 记录饮食</button>
+        <button class="btn btn-primary" onclick="showRecordExercise()">🏃 记录运动</button>
+        <button class="btn btn-outline" onclick="showEditProfile()">✏️ 编辑信息</button>
+        <button class="btn btn-success" onclick="checkIn()">✅ 打卡</button>
+    </div>
+
+    <div class="card" id="dietSummary" style="display:none;"><div class="card-title"><span class="icon">🍽️</span> 今日饮食</div><div id="dietContent"></div></div>
+    <div class="encourage-box" id="encourageBox">💪 每一天的坚持，都是对未来的投资！</div>
+    <div class="card" style="margin-top:18px;"><div class="card-title"><span class="icon">📚</span> 每日科普</div><div id="knowledgeContent"><p>加载中...</p></div></div>
+</div>
+
+{% include 'modals.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+var activeProfileId = {{ active_profile_id or 0 }};
+var weekChart = null;
+var currentFood = null;
+
+if (activeProfileId) loadProfileData(activeProfileId);
+loadKnowledge();
+
+function switchProfile(pid) {
+    document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.profile-tab[data-id="${pid}"]`).classList.add('active');
+    activeProfileId = pid;
+    loadProfileData(pid);
+}
+
+function loadProfileData(pid) {
+    fetch('/api/profile/' + pid).then(res => res.json()).then(data => {
+        if (data.status) {
+            document.getElementById('statWeight').textContent = data.status.weight_kg || '-';
+            document.getElementById('statFat').textContent = (data.status.body_fat_pct || '-');
+            document.getElementById('statBMI').textContent = data.status.bmi || '-';
+        }
+        if (data.today_diet) {
+            document.getElementById('statCal').textContent = data.today_diet.total_cal || 0;
+            document.getElementById('dietSummary').style.display = 'block';
+            document.getElementById('dietContent').innerHTML = `<p>总热量: <strong>${data.today_diet.total_cal || 0} kcal</strong> | 蛋白质: ${data.today_diet.total_protein || 0}g | 脂肪: ${data.today_diet.total_fat || 0}g | 碳水: ${data.today_diet.total_carb || 0}g</p>`;
+        }
+        if (data.today_exercise && data.today_exercise.total_burn) {
+            document.getElementById('encourageBox').innerHTML = `🔥 今天消耗了 <strong>${data.today_exercise.total_burn} kcal</strong>！太棒了，继续保持！`;
+        }
+        if (data.goal) {
+            document.getElementById('goalCard').style.display = 'block';
+            document.getElementById('goalContent').innerHTML = `<p>${data.goal.goal_type} → <strong>${data.goal.target_weight_kg} kg</strong></p><p>截止: ${data.goal.end_date}</p>`;
+        }
+        drawWeekChart(data.week_data);
+    });
+}
+
+function drawWeekChart(data) {
+    if (weekChart) weekChart.destroy();
+    if (!data || data.length === 0) return;
+    weekChart = new Chart(document.getElementById('weekChart'), {
+        type: 'bar', data: { labels: data.map(r => r.record_date), datasets: [{ label: '体重(kg)', data: data.map(r => r.weight_kg), backgroundColor: 'rgba(99,102,241,0.7)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 8 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false } } }
+    });
+}
+
+function loadKnowledge() {
+    fetch('/api/knowledge').then(r => r.json()).then(d => {
+        if (d && d.title) document.getElementById('knowledgeContent').innerHTML = `<h4>${d.title}</h4><p>${d.content}</p><p style="color:var(--primary); font-weight:600; margin-top:8px;">💡 ${d.encouragement || ''}</p>`;
+    });
+}
+
+function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function showRecordWeight() { document.getElementById('weightDate').value = new Date().toISOString().split('T')[0]; showModal('modalWeight'); }
+function showRecordDiet() { showModal('modalDiet'); currentFood = null; document.getElementById('foodSearch').value = ''; document.getElementById('foodResults').classList.remove('show'); document.getElementById('foodDetail').style.display = 'none'; }
+function showRecordExercise() { showModal('modalExercise'); }
+function showAddProfile() { showModal('modalAddProfile'); }
+function showEditProfile() {
+    fetch('/api/profile/' + activeProfileId).then(r => r.json()).then(d => {
+        document.getElementById('editProfileId').value = activeProfileId;
+        document.getElementById('editProfileName').value = d.profile.profile_name;
+        document.getElementById('editProfileGender').value = d.profile.gender;
+        document.getElementById('editProfileBirth').value = d.profile.birth_date;
+        document.getElementById('editProfileHeight').value = d.profile.height_cm;
+        showModal('modalEditProfile');
+    });
+}
+function checkIn() {
+    fetch('/api/checkin', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ profile_id: activeProfileId, check_type: '运动' })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) {
+            alert('✅ 打卡成功！');
+            document.getElementById('encourageBox').innerHTML = '✅ 今日已打卡！坚持就是胜利！';
+        } else {
+            alert(d.error || '打卡失败');
+        }
+    });
+}
+document.addEventListener('click', function(e) { if (e.target.classList.contains('modal-overlay')) e.target.style.display = 'none'; });
+</script>
+{% endblock %}

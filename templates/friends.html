@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width:700px; margin:0 auto;">
+    <h2 style="margin-bottom:20px;">👥 好友管理</h2>
+
+    <!-- 搜索添加好友 -->
+    <div class="card">
+        <div class="card-title">🔍 添加好友</div>
+        <div class="form-group">
+            <label>搜索用户（手机号或昵称）</label>
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="searchUser" placeholder="输入手机号或昵称搜索..." oninput="searchUser()" style="flex:1;">
+            </div>
+        </div>
+        <div id="searchResults" style="margin-top:10px;"></div>
+    </div>
+
+    <!-- 收到的好友申请 -->
+    {% if pending_received %}
+    <div class="card">
+        <div class="card-title">📩 收到的好友申请</div>
+        <table>
+            <tr><th>用户</th><th>手机号</th><th>时间</th><th>操作</th></tr>
+            {% for p in pending_received %}
+            <tr>
+                <td><strong>{{ p.nickname }}</strong></td>
+                <td>{{ p.phone[:3] }}****{{ p.phone[-4:] }}</td>
+                <td>{{ p.created_at.strftime('%m-%d %H:%M') }}</td>
+                <td>
+                    <button class="btn btn-success btn-sm" onclick="handleFriend({{ p.friendship_id }}, 'accept')">✅ 接受</button>
+                    <button class="btn btn-outline btn-sm" onclick="handleFriend({{ p.friendship_id }}, 'reject')">❌ 拒绝</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- 发出的申请 -->
+    {% if pending_sent %}
+    <div class="card">
+        <div class="card-title">📤 发出的好友申请</div>
+        <table>
+            <tr><th>用户</th><th>手机号</th><th>时间</th><th>状态</th></tr>
+            {% for p in pending_sent %}
+            <tr>
+                <td><strong>{{ p.nickname }}</strong></td>
+                <td>{{ p.phone[:3] }}****{{ p.phone[-4:] }}</td>
+                <td>{{ p.created_at.strftime('%m-%d %H:%M') }}</td>
+                <td><span class="badge badge-warning">等待中</span></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- 好友列表 -->
+    <div class="card">
+        <div class="card-title">👥 我的好友 ({{ friends_list|length }})</div>
+        {% if friends_list %}
+        <table>
+            <tr><th>昵称</th><th>手机号</th><th>操作</th></tr>
+            {% for f in friends_list %}
+            <tr>
+                <td><strong>{{ f.nickname }}</strong></td>
+                <td>{{ f.phone[:3] }}****{{ f.phone[-4:] }}</td>
+                <td>
+                    <button class="btn btn-outline btn-sm" onclick="deleteFriend({{ f.user_id }})">🗑️ 删除</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p style="color:var(--text-muted); text-align:center; padding:40px;">还没有好友，快去添加吧！</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function searchUser() {
+    var q = document.getElementById('searchUser').value.trim();
+    var container = document.getElementById('searchResults');
+    if (q.length < 1) { container.innerHTML = ''; return; }
+
+    fetch('/api/search_user?q=' + encodeURIComponent(q))
+        .then(r => r.json())
+        .then(data => {
+            if (data.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-muted); padding:10px;">未找到用户</p>';
+                return;
+            }
+            var html = '';
+            data.forEach(u => {
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid var(--border);">
+                    <div><strong>${u.nickname}</strong> <small style="color:var(--text-muted);">${u.phone.slice(0,3)}****${u.phone.slice(-4)}</small></div>
+                    <button class="btn btn-primary btn-sm" onclick="addFriend(${u.user_id})">➕ 添加</button>
+                </div>`;
+            });
+            container.innerHTML = html;
+        });
+}
+
+function addFriend(friendId) {
+    fetch('/api/add_friend', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ friend_id: friendId })
+    }).then(r => r.json()).then(d => {
+        alert(d.message || d.error);
+        if (d.success) location.reload();
+    });
+}
+
+function handleFriend(fid, action) {
+    var msg = action === 'accept' ? '确定接受好友申请？' : '确定拒绝？';
+    if (!confirm(msg)) return;
+    fetch('/api/handle_friend', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ friendship_id: fid, action: action })
+    }).then(r => r.json()).then(d => {
+        alert(d.message || d.error);
+        if (d.success) location.reload();
+    });
+}
+
+function deleteFriend(friendId) {
+    if (!confirm('确定删除该好友？')) return;
+    fetch('/api/delete_friend', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ friend_id: friendId })
+    }).then(r => r.json()).then(d => {
+        alert(d.message || d.error);
+        if (d.success) location.reload();
+    });
+}
+</script>
+{% endblock %}

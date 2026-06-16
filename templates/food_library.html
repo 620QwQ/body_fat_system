@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="secondary-nav"><a href="{{ url_for('dashboard') }}">← 返回仪表盘</a></div>
+<h2>🍽️ 校园食物热量库</h2>
+<div class="card">
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:15px;">
+        <a href="{{ url_for('food_library') }}" class="btn btn-sm {% if not current_category %}btn-primary{% endif %}">全部</a>
+        {% for cat in categories %}
+        <a href="{{ url_for('food_library', category=cat) }}" class="btn btn-sm {% if current_category==cat %}btn-primary{% endif %}">{{ cat }}</a>
+        {% endfor %}
+    </div>
+    {% if foods %}
+    <table>
+        <tr><th>食物</th><th>类别</th><th>热量/100g</th><th>蛋白质</th><th>脂肪</th><th>碳水</th><th>场景</th></tr>
+        {% for f in foods %}
+        <tr><td>{{ f.food_name }}</td><td>{{ f.category }}</td><td>{{ f.calories_per_100g }} kcal</td><td>{{ f.protein_per_100g }}g</td><td>{{ f.fat_per_100g }}g</td><td>{{ f.carb_per_100g }}g</td><td>{{ f.scene }}</td></tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="secondary-nav">
+    <a href="{{ url_for('profile_detail', profile_id=profile_id) }}">← 返回详情</a>
+</div>
+<h2>📏 {{ profile.profile_name }} 的身体维度记录</h2>
+
+<div class="card">
+    <h3>➕ 添加身体数据</h3>
+    <form method="post" action="{{ url_for('add_measurement') }}">
+        <input type="hidden" name="profile_id" value="{{ profile_id }}">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:10px;">
+            <div class="form-group"><label>日期</label><input type="date" name="measure_date" required></div>
+            <div class="form-group"><label>时段</label><select name="measure_time"><option value="空腹">空腹</option><option value="早餐后">早餐后</option><option value="午餐后">午餐后</option><option value="晚餐后">晚餐后</option><option value="睡前">睡前</option></select></div>
+            <div class="form-group"><label>体重(kg)</label><input type="number" step="0.1" name="weight_kg" required></div>
+            <div class="form-group"><label>体脂率(%)</label><input type="number" step="0.1" name="body_fat_pct"></div>
+            <div class="form-group"><label>腰围(cm)</label><input type="number" step="0.1" name="waist_cm"></div>
+            <div class="form-group"><label>臀围(cm)</label><input type="number" step="0.1" name="hip_cm"></div>
+            <div class="form-group"><label>臂围(cm)</label><input type="number" step="0.1" name="arm_cm"></div>
+            <div class="form-group"><label>大腿围(cm)</label><input type="number" step="0.1" name="thigh_cm"></div>
+            <div class="form-group"><label>胸围(cm)</label><input type="number" step="0.1" name="chest_cm"></div>
+            <div class="form-group"><label>备注</label><input type="text" name="body_note" placeholder="如：水肿、乏力"></div>
+            <div style="display:flex; align-items:flex-end;"><button type="submit" class="btn btn-success" style="width:100%;">记录</button></div>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <h3>📋 历史记录</h3>
+    {% if records %}
+    <table>
+        <tr><th>日期</th><th>时段</th><th>体重</th><th>体脂率</th><th>腰围</th><th>臀围</th><th>臂围</th><th>备注</th></tr>
+        {% for r in records %}
+        <tr><td>{{ r.measure_date }}</td><td>{{ r.measure_time }}</td><td>{{ r.weight_kg }}</td><td>{{ r.body_fat_pct if r.body_fat_pct else '-' }}</td><td>{{ r.waist_cm if r.waist_cm else '-' }}</td><td>{{ r.hip_cm if r.hip_cm else '-' }}</td><td>{{ r.arm_cm if r.arm_cm else '-' }}</td><td>{{ r.body_note if r.body_note else '-' }}</td></tr>
+        {% endfor %}
+    </table>
+    {% else %}<p style="color:#888; text-align:center; padding:40px;">暂无记录</p>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="secondary-nav">
+    <a href="{{ url_for('profile_detail', profile_id=profile_id) }}">← 返回详情</a>
+</div>
+<h2>🍽️ {{ profile.profile_name }} 的饮食记录</h2>
+
+<div class="card">
+    <h3>➕ 添加饮食</h3>
+    <form method="post" action="{{ url_for('add_diet') }}">
+        <input type="hidden" name="profile_id" value="{{ profile_id }}">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px;">
+            <div class="form-group"><label>时间</label><input type="datetime-local" name="meal_time" required></div>
+            <div class="form-group"><label>餐次</label><select name="meal_type"><option value="早餐">早餐</option><option value="午餐">午餐</option><option value="晚餐">晚餐</option><option value="加餐">加餐</option></select></div>
+            <div class="form-group"><label>食物名称</label><input type="text" name="food_name" required></div>
+            <div class="form-group"><label>份量(g)</label><input type="number" name="portion"></div>
+            <div class="form-group"><label>热量(kcal)</label><input type="number" name="calories" required></div>
+            <div style="display:flex; align-items:flex-end;"><button type="submit" class="btn btn-success" style="width:100%;">添加</button></div>
+        </div>
+    </form>
+</div>
+
+<div class="stats-row"><div class="stat-card"><div class="stat-value">{{ today_cal }}</div><div class="stat-label">今日摄入 (kcal)</div></div></div>
+
+<div class="card">
+    <h3>📋 今日饮食</h3>
+    {% if today_diets %}
+    <table>
+        <tr><th>时间</th><th>餐次</th><th>食物</th><th>份量(g)</th><th>热量(kcal)</th></tr>
+        {% for d in today_diets %}
+        <tr><td>{{ d.meal_time.strftime('%H:%M') }}</td><td>{{ d.meal_type }}</td><td>{{ d.food_name }}</td><td>{{ d.portion_g if d.portion_g else '-' }}</td><td>{{ d.calories_kcal }}</td></tr>
+        {% endfor %}
+    </table>
+    {% else %}<p style="color:#888; text-align:center; padding:40px;">今天还没有饮食记录</p>{% endif %}
+</div>
+{% endblock %}

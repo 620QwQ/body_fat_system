@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width:600px; margin:40px auto;">
+    <div class="card" style="padding:40px;">
+        <h2 style="text-align:center; color:var(--primary); margin-bottom:10px;">🎉 注册成功！</h2>
+        <p style="text-align:center; color:var(--text-muted); margin-bottom:30px;">请完善你的个人信息，开始管理身材</p>
+        <form method="post">
+            <div class="form-group">
+                <label>性别</label>
+                <select name="gender" required>
+                    <option value="男">👨 男</option>
+                    <option value="女">👩 女</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>出生日期</label>
+                <div class="form-row">
+                    <select name="year" required><option value="">年</option></select>
+                    <select name="month" required>
+                        <option value="">月</option>
+                        {% for m in range(1,13) %}
+                        <option value="{{ m }}">{{ m }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="day" required><option value="">日</option></select>
+                </div>
+            </div>
+            <div class="form-group"><label>身高 (cm)</label><input type="number" step="0.1" name="height_cm" required placeholder="如：175"></div>
+            <div class="form-group"><label>当前体重 (kg)</label><input type="number" step="0.1" name="weight_kg" required placeholder="如：70"></div>
+            <div class="form-group">
+                <label>目标</label>
+                <select name="goal_type" required>
+                    <option value="减重">减重</option>
+                    <option value="增肌">增肌</option>
+                    <option value="保持">保持</option>
+                </select>
+            </div>
+            <div class="form-group"><label>目标体重 (kg)</label><input type="number" step="0.1" name="target_weight" required placeholder="你想达到的目标体重"></div>
+            <button type="submit" class="btn btn-primary btn-block">开始管理</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 生成年份（今年到1960年）
+var yearSel = document.querySelector('select[name="year"]');
+var currentYear = new Date().getFullYear();
+for (var y = currentYear; y >= 1960; y--) {
+    var opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    yearSel.appendChild(opt);
+}
+
+// 联动日期
+var monthSel = document.querySelector('select[name="month"]');
+var daySel = document.querySelector('select[name="day"]');
+
+function updateDays() {
+    var y = parseInt(yearSel.value);
+    var m = parseInt(monthSel.value);
+    if (!y || !m) return;
+    var maxDay = new Date(y, m, 0).getDate();
+    daySel.innerHTML = '<option value="">日</option>';
+    for (var d = 1; d <= maxDay; d++) {
+        var opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d;
+        daySel.appendChild(opt);
+    }
+}
+
+yearSel.addEventListener('change', updateDays);
+monthSel.addEventListener('change', updateDays);
+</script>
+{% endblock %}

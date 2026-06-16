@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width:1000px; margin:0 auto;">
+    <h2 style="margin-bottom:20px;">🔍 食物热量查询表</h2>
+    
+    <div class="card">
+        <div class="btn-group" style="margin-bottom:15px;" id="categoryBtns">
+            <button class="btn btn-sm btn-primary" onclick="filterCategory('')">全部</button>
+        </div>
+        <div class="form-group">
+            <input type="text" id="searchInput" placeholder="🔍 搜索食物..." oninput="filterFood()">
+        </div>
+    </div>
+    
+    <div class="card">
+        <table id="foodTable">
+            <thead><tr><th>食物名称</th><th>类别</th><th>热量/100g</th><th>蛋白质</th><th>脂肪</th><th>碳水</th><th>场景</th></tr></thead>
+            <tbody id="foodTableBody"></tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+var allFoods = [];
+var currentCategory = '';
+
+fetch('/api/food_categories').then(r => r.json()).then(cats => {
+    cats.forEach(cat => {
+        document.getElementById('categoryBtns').innerHTML += `<button class="btn btn-sm btn-outline" onclick="filterCategory('${cat}')">${cat}</button>`;
+    });
+});
+
+fetch('/api/food_library_all').then(r => r.json()).then(data => {
+    allFoods = data;
+    renderTable(data);
+});
+
+function filterCategory(cat) {
+    currentCategory = cat;
+    document.querySelectorAll('#categoryBtns .btn').forEach(b => b.classList.remove('btn-primary'));
+    event.target.classList.add('btn-primary');
+    filterFood();
+}
+
+function filterFood() {
+    var q = document.getElementById('searchInput').value.toLowerCase();
+    var filtered = allFoods.filter(f => {
+        var matchCat = !currentCategory || f.category === currentCategory;
+        var matchSearch = !q || f.food_name.toLowerCase().includes(q);
+        return matchCat && matchSearch;
+    });
+    renderTable(filtered);
+}
+
+function renderTable(foods) {
+    var html = '';
+    foods.forEach(f => {
+        html += `<tr>
+            <td>${f.food_name}</td><td>${f.category}</td>
+            <td><strong>${f.calories_per_100g}</strong> kcal</td>
+            <td>${f.protein_per_100g}g</td><td>${f.fat_per_100g}g</td><td>${f.carb_per_100g}g</td>
+            <td>${f.scene}</td>
+        </tr>`;
+    });
+    document.getElementById('foodTableBody').innerHTML = html || '<tr><td colspan="7" style="text-align:center;padding:40px;">未找到匹配食物</td></tr>';
+}
+</script>
+{% endblock %}
